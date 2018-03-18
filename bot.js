@@ -1,74 +1,131 @@
-const Discord = require('discord.js');
+let Discord = require('discord.js')
 const client = new Discord.Client();
-const request = require('request');
+let request = require('request');
 
-const auth = require('./auth.json');
+let auth = require('./auth.json');
 
 const img = 'https://i.imgur.com/IcrST7s.jpg';
 const img2 = 'https://i.imgur.com/3ktz5Ql.jpg';
 const botname = 'site-bot';
-
-client.on('message', message => {
-    if (message.content === 'ping') {
-        message.channel.send('CREATEIMG');
-        // message.react("👍");
-    }
-    if (message.author.username === botname) {
-        handleBotMessage(message);
-    }
-});
-
-client.login(auth.discord.auth_token);
-
-
-function handleBotMessage(message) {
-    if (message.content !== 'CREATEIMG') {
-        return;
-    }
-    addReactions(message);
-    createReactionCollector(message);
-}
-
-function addReactions(message) {
-    message.clearReactions().then(() => {
-        message.react("⬅");
-        message.react("➡");
-    });
-}
-
-function createReactionCollector(message) {
-    const filter = (reaction, user) => (reaction.emoji.name === '⬅' || reaction.emoji.name === '➡') && user.username !== botname;
-    const collector = message.createReactionCollector(filter);
-    collector.on('collect', r => emojiCollected(message, r.emoji.name));
-}
-
-function emojiCollected(message, emojiName) {
-    console.log('sitelog test collect?');
-    if (emojiName === '⬅') {
-        message.edit(img);
-    } else if (emojiName === '➡') {
-        message.edit(img2);
-    }
-    addReactions(message);
-}
-
-// TODO: Add support for galleries
-// const url = 'https://api.imgur.com/3/gallery/album/vgW1p';
-const url = 'https://api.imgur.com/3/album/vtJCJ';
-const options = {
-    url: url,
-    headers: {
-        'Authorization': auth.imgur.auth_header
-    }
+const emojiList = {
+    leftArrow: "⬅",
+    rightArrow: "➡"
 };
 
-request.get(options, (err, res, body) => {
-    var parsed = JSON.parse(body);
-    initializeGallery(parsed.data.images);
-});
-
-function initializeGallery(imageList) {
-    for (image in imageList) {
-        console.log(imageList[image].link);
+class Bot {
+    constructor(){
+        this.albumDict = {};
     }
+
+    initialize() {
+        client.on('message', message => {
+            if (message.content.startsWith('album')) {
+                message.channel.send('CREATEIMG')
+                .then((sentMessage) => {
+                    this.populateAlbum(message, sentMessage);
+                });
+            }
+            if (message.author.username === botname) {
+                this.handleBotMessage(message);
+            }
+        });
+        
+        client.login(auth.discord.auth_token);
+    }
+    
+    handleBotMessage(message) {
+        if (message.content !== 'CREATEIMG') {
+            return;
+        }
+        this.addReactions(message);
+        this.createReactionCollector(message);
+    }
+
+    addReactions(message) {
+        message.clearReactions()
+        .then(() => {
+        message.react(emojiList.leftArrow)
+        .then(() => {
+        message.react(emojiList.rightArrow);
+        })});
+    }
+
+    createReactionCollector(message) {
+        const filter = (reaction, user) => (reaction.emoji.name === emojiList.leftArrow || reaction.emoji.name === emojiList.rightArrow) && user.username !== botname;
+        const collector = message.createReactionCollector(filter);
+        collector.on('collect', r => this.emojiCollected(message, r.emoji.name));
+    }
+
+    emojiCollected(message, emojiName) {
+        if (emojiName === emojiList.leftArrow) {
+            this.handleLeftArrow(message);
+        } else if (emojiName === emojiList.rightArrow) {
+            this.handleRightArrow(message);
+        }
+        this.addReactions(message);
+    }
+
+    handleLeftArrow(message) {
+        let imagesData = this.albumDict[message.id];
+        console.log(imagesData);
+        let numImages = imagesData.images.length;
+        let current = imagesData.current;
+        current = this.adjustImageIndex(current, -1, numImages);
+        this.albumDict[message.id].current = current;
+        message.edit(imagesData.images[current].link);
+    }
+
+    handleRightArrow(message) {
+        let imagesData = this.albumDict[message.id];
+        let numImages = imagesData.images.length;
+        let current = imagesData.current;
+        current = this.adjustImageIndex(current, 1, numImages);
+        this.albumDict[message.id].current = current;
+        message.edit(imagesData.images[current].link);
+    }
+
+    adjustImageIndex(index, shift, modulo) {
+        let final = index + shift + modulo;
+        final = final % modulo;
+        return final;
+    }
+
+    // TODO: Add support for galleries
+    // const url = 'https://api.imgur.com/3/gallery/album/vgW1p';
+    // const url2 = 'https://api.imgur.com/3/album/vtJCJ';
+
+    populateAlbum(message, sentMessage) {
+        let input = message.content.split(' ');
+        if (input.length !== 2) {
+            return;
+        }
+
+        let albumLink = input[1];
+        this.retrieveImagesFromUrl(albumLink, sentMessage);
+    }
+
+    retrieveImagesFromUrl(albumLink, sentMessage) {
+        const options = {
+            url: albumLink,
+            headers: {
+                'Authorization': auth.imgur.auth_header
+            }
+        };
+        request.get(options, (err, res, body) => {
+            if (err) {
+                console.log('imgur request error:', err);
+                return;
+            }
+            let parsed = JSON.parse(body);
+            this.albumDict[sentMessage.id] = { images: parsed.data.images, current: 0 };
+        });
+    }
+
 }
+
+function start() {
+    let bot = new Bot();
+    bot.initialize();
+}
+
+start();
