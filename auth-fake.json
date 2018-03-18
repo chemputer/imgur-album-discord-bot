@@ -1,0 +1,9 @@
+{
+    "discord": {
+        "bot_name": "site-bot",
+        "auth_token": "discord auth token"
+    },
+    "imgur": {
+        "auth_header": "Client-ID imgur client id"
+    }
+}

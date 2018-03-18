@@ -1,0 +1,27 @@
+{
+  "name": "imgur-album-discord-bot",
+  "version": "1.0.0",
+  "description": "Discord bot to automatically improve imgur albums",
+  "main": "bot.js",
+  "dependencies": {
+    "discord.js": "^11.3.2",
+    "request": "^2.85.0"
+  },
+  "devDependencies": {
+    "typescript": "^2.7.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bombsite/imgur-album-discord-bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bombsite/imgur-album-discord-bot/issues"
+  },
+  "homepage": "https://github.com/bombsite/imgur-album-discord-bot#readme"
+}
