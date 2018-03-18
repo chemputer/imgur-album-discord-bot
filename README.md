@@ -10,7 +10,7 @@ displayed its images with a way to use discord emojis to scroll through them.
 Here's how the final result looks.
 
 ![dog1](https://i.imgur.com/LCBOYyz.png "Example 1")
-![dog2](https://i.imgur.com/bTg8YYR.gifv "Example 2")
+![dog2](https://i.imgur.com/bTg8YYR.gif "Example 2")
 
 Clicking on the emoji arrows scrolls through the images in the album.
 
