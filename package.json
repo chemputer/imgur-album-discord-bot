@@ -4,7 +4,7 @@
   "description": "Discord bot to automatically improve imgur albums",
   "main": "bot.js",
   "dependencies": {
-    "discord.js": "^11.3.2",
+    "discord.js": "^11.6.4",
     "request": "^2.85.0"
   },
   "devDependencies": {
